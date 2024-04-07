@@ -2,7 +2,7 @@ package logger
 
 import (
 	"fmt"
-	"github.com/jimu-server/config/config"
+	"github.com/jimu-server/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
