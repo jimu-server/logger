@@ -37,15 +37,26 @@ func init() {
 	if config.Evn.App.Logger.MaxAge == 0 {
 		zap.L().Panic("app.zap.maxbackups error")
 	}
-	lumberJackLogger := &lumberjack.Logger{
+	// 创建控制台日志持久化
+	consoleLog := &lumberjack.Logger{
 		Filename:   config.Evn.App.Logger.FileName,
 		MaxSize:    config.Evn.App.Logger.MaxSize, // megabytes
 		MaxBackups: config.Evn.App.Logger.MaxBackups,
 		MaxAge:     config.Evn.App.Logger.MaxAge, //days
 	}
-	writeSyncer := zapcore.NewMultiWriteSyncer(zapcore.AddSync(lumberJackLogger), zapcore.AddSync(os.Stdout))
+
+	// 创建ERROR日志持久化
+	errorLog := &lumberjack.Logger{
+		Filename:   config.Evn.App.Logger.FileName + "-err.log",
+		MaxSize:    config.Evn.App.Logger.MaxSize, // megabytes
+		MaxBackups: config.Evn.App.Logger.MaxBackups,
+		MaxAge:     config.Evn.App.Logger.MaxAge, //days
+	}
+	// 创建持久化日志写入
+	writeSyncer := zapcore.NewMultiWriteSyncer(zapcore.AddSync(consoleLog), zapcore.AddSync(os.Stdout))
 	core := zapcore.NewCore(encoderConfig(), writeSyncer, zapLevel)
-	Logger = zap.New(core, zap.AddCaller())
+	errCore := zapcore.NewCore(encoderConfig(), zapcore.AddSync(errorLog), zapcore.ErrorLevel)
+	Logger = zap.New(zapcore.NewTee(core, errCore), zap.AddCaller())
 	zap.ReplaceGlobals(Logger)
 }
 
