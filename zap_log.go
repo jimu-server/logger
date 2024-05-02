@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -37,9 +38,13 @@ func init() {
 	if config.Evn.App.Logger.MaxAge == 0 {
 		zap.L().Panic("app.zap.maxbackups error")
 	}
+	fileName := config.Evn.App.Logger.FileName
+	if strings.HasSuffix(fileName, ".log") {
+		fileName = fileName[0 : len(fileName)-len(".log")]
+	}
 	// 创建控制台日志持久化
 	consoleLog := &lumberjack.Logger{
-		Filename:   config.Evn.App.Logger.FileName,
+		Filename:   fileName + ".log",
 		MaxSize:    config.Evn.App.Logger.MaxSize, // megabytes
 		MaxBackups: config.Evn.App.Logger.MaxBackups,
 		MaxAge:     config.Evn.App.Logger.MaxAge, //days
@@ -47,7 +52,7 @@ func init() {
 
 	// 创建ERROR日志持久化
 	errorLog := &lumberjack.Logger{
-		Filename:   config.Evn.App.Logger.FileName + "-err.log",
+		Filename:   fileName + "-err.log",
 		MaxSize:    config.Evn.App.Logger.MaxSize, // megabytes
 		MaxBackups: config.Evn.App.Logger.MaxBackups,
 		MaxAge:     config.Evn.App.Logger.MaxAge, //days
