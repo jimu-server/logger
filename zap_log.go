@@ -73,8 +73,8 @@ func encoderConfig() zapcore.Encoder {
 		CallerKey:     "line",
 		MessageKey:    "message",
 		StacktraceKey: "stacktrace",
-		LineEnding:    zapcore.DefaultLineEnding,        // 日志换行符号
-		EncodeLevel:   zapcore.CapitalColorLevelEncoder, // 小写编码器
+		LineEnding:    zapcore.DefaultLineEnding,     // 日志换行符号
+		EncodeLevel:   zapcore.LowercaseLevelEncoder, // 小写编码器
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 			// 自定义时间编码格式
 			enc.AppendString(t.Format(time.DateTime))
