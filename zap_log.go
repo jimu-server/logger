@@ -16,46 +16,50 @@ var (
 )
 
 func init() {
-	if config.Evn.App.Logger.Level == "" {
-		zap.L().Panic("aurora. zap.level error")
+	FileName := "system.log"
+	MaxSize := 100 // megabytes
+	MaxBackups := 30
+	MaxAge := 30 // days
+	Level := "info"
+	if config.Evn.App.Logger.Level != "" {
+		Level = config.Evn.App.Logger.Level
 	}
 	var zapLevel zapcore.Level
-	err := zapLevel.Set(config.Evn.App.Logger.Level)
+	err := zapLevel.Set(Level)
 	if err != nil {
-		zap.L().Panic("aurora. zap.level error")
+		panic(err.Error())
 		return
 	}
+	if config.Evn.App.Logger.FileName != "" {
+		FileName = config.Evn.App.Logger.FileName
+	}
+	if config.Evn.App.Logger.MaxSize != 0 {
+		MaxSize = config.Evn.App.Logger.MaxSize * 1024 * 1024 // bytes
+	}
+	if config.Evn.App.Logger.MaxBackups != 0 {
+		MaxBackups = config.Evn.App.Logger.MaxBackups
+	}
+	if config.Evn.App.Logger.MaxAge != 0 {
+		MaxAge = config.Evn.App.Logger.MaxAge
+	}
 
-	if config.Evn.App.Logger.FileName == "" {
-		zap.L().Panic("app.zap.filename error")
-	}
-	if config.Evn.App.Logger.MaxSize == 0 {
-		zap.L().Panic("app.zap.maxsize error")
-	}
-	if config.Evn.App.Logger.MaxBackups == 0 {
-		zap.L().Panic("app.zap.maxage error")
-	}
-	if config.Evn.App.Logger.MaxAge == 0 {
-		zap.L().Panic("app.zap.maxbackups error")
-	}
-	fileName := config.Evn.App.Logger.FileName
-	if strings.HasSuffix(fileName, ".log") {
-		fileName = fileName[0 : len(fileName)-len(".log")]
+	if strings.HasSuffix(FileName, ".log") {
+		FileName = FileName[0 : len(FileName)-len(".log")]
 	}
 	// 创建控制台日志持久化
 	consoleLog := &lumberjack.Logger{
-		Filename:   fileName + ".log",
-		MaxSize:    config.Evn.App.Logger.MaxSize, // megabytes
-		MaxBackups: config.Evn.App.Logger.MaxBackups,
-		MaxAge:     config.Evn.App.Logger.MaxAge, //days
+		Filename:   FileName + ".log",
+		MaxSize:    MaxSize, // megabytes
+		MaxBackups: MaxBackups,
+		MaxAge:     MaxAge, //days
 	}
 
 	// 创建ERROR日志持久化
 	errorLog := &lumberjack.Logger{
-		Filename:   fileName + "-err.log",
-		MaxSize:    config.Evn.App.Logger.MaxSize, // megabytes
-		MaxBackups: config.Evn.App.Logger.MaxBackups,
-		MaxAge:     config.Evn.App.Logger.MaxAge, //days
+		Filename:   FileName + "-err.log",
+		MaxSize:    MaxSize, // megabytes
+		MaxBackups: MaxBackups,
+		MaxAge:     MaxAge, //days
 	}
 	// 创建持久化日志写入
 	writeSyncer := zapcore.NewMultiWriteSyncer(zapcore.AddSync(consoleLog), zapcore.AddSync(os.Stdout))
