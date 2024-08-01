@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	Logger *zap.Logger
+	Logger           *zap.Logger
+	MultiWriteSyncer zapcore.WriteSyncer
 )
 
 func init() {
@@ -62,15 +63,15 @@ func init() {
 		MaxAge:     MaxAge, //days
 	}
 	// 创建持久化日志写入
-	writeSyncer := zapcore.NewMultiWriteSyncer(zapcore.AddSync(consoleLog), zapcore.AddSync(os.Stdout))
-	core := zapcore.NewCore(encoderConfig(), writeSyncer, zapLevel)
-	errCore := zapcore.NewCore(encoderConfig(), zapcore.AddSync(errorLog), zapcore.ErrorLevel)
+	MultiWriteSyncer = zapcore.NewMultiWriteSyncer(zapcore.AddSync(consoleLog), zapcore.AddSync(os.Stdout))
+	core := zapcore.NewCore(EncoderConfig(), MultiWriteSyncer, zapLevel)
+	errCore := zapcore.NewCore(EncoderConfig(), zapcore.AddSync(errorLog), zapcore.ErrorLevel)
 	Logger = zap.New(zapcore.NewTee(core, errCore), zap.AddCaller())
 	zap.ReplaceGlobals(Logger)
 }
 
-func encoderConfig() zapcore.Encoder {
-	config := zapcore.EncoderConfig{
+func EncoderConfig() zapcore.Encoder {
+	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:       "time",
 		LevelKey:      "level",
 		NameKey:       "logger",
@@ -87,7 +88,7 @@ func encoderConfig() zapcore.Encoder {
 		EncodeCaller:   zapcore.ShortCallerEncoder, // 路径编码器
 		EncodeName:     zapcore.FullNameEncoder,
 	}
-	return zapcore.NewConsoleEncoder(config)
+	return zapcore.NewConsoleEncoder(encoderConfig)
 }
 
 func Info(format string, a ...any) {
